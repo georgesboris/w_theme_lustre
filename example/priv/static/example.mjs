@@ -1255,6 +1255,132 @@ function color(r, g, b) {
   let c = $[0];
   return c;
 }
+function slate() {
+  return new ColorScale(
+    color(252, 252, 253),
+    color(249, 249, 251),
+    color(232, 232, 236),
+    color(240, 240, 243),
+    color(224, 225, 230),
+    color(205, 206, 214),
+    color(217, 217, 224),
+    color(185, 187, 198),
+    color(139, 141, 152),
+    color(150, 152, 162),
+    color(128, 131, 141),
+    color(255, 255, 255),
+    color(28, 32, 36),
+    color(96, 100, 108)
+  );
+}
+function red2() {
+  return new ColorScale(
+    color(255, 252, 252),
+    color(255, 247, 247),
+    color(255, 219, 220),
+    color(254, 235, 236),
+    color(255, 205, 206),
+    color(244, 169, 170),
+    color(253, 189, 190),
+    color(235, 142, 144),
+    color(229, 72, 77),
+    color(236, 83, 88),
+    color(220, 62, 66),
+    color(255, 255, 255),
+    color(100, 23, 35),
+    color(206, 44, 49)
+  );
+}
+function pink2() {
+  return new ColorScale(
+    color(255, 252, 254),
+    color(254, 247, 251),
+    color(251, 220, 239),
+    color(254, 233, 245),
+    color(246, 206, 231),
+    color(231, 172, 208),
+    color(239, 191, 221),
+    color(221, 147, 194),
+    color(214, 64, 159),
+    color(220, 72, 166),
+    color(207, 56, 151),
+    color(255, 255, 255),
+    color(101, 18, 73),
+    color(194, 41, 138)
+  );
+}
+function cyan() {
+  return new ColorScale(
+    color(250, 253, 254),
+    color(242, 250, 251),
+    color(202, 241, 246),
+    color(222, 247, 249),
+    color(181, 233, 240),
+    color(125, 206, 220),
+    color(157, 221, 231),
+    color(61, 185, 207),
+    color(0, 162, 199),
+    color(247, 172, 213),
+    color(7, 151, 185),
+    color(255, 255, 255),
+    color(13, 60, 72),
+    color(16, 125, 152)
+  );
+}
+function green2() {
+  return new ColorScale(
+    color(251, 254, 252),
+    color(244, 251, 246),
+    color(214, 241, 223),
+    color(230, 246, 235),
+    color(196, 232, 209),
+    color(142, 206, 170),
+    color(173, 221, 192),
+    color(91, 185, 139),
+    color(48, 164, 108),
+    color(53, 173, 115),
+    color(43, 154, 102),
+    color(255, 255, 255),
+    color(25, 59, 45),
+    color(33, 131, 88)
+  );
+}
+function yellow2() {
+  return new ColorScale(
+    color(253, 253, 249),
+    color(254, 252, 233),
+    color(255, 243, 148),
+    color(255, 250, 184),
+    color(255, 231, 112),
+    color(228, 199, 103),
+    color(243, 215, 104),
+    color(213, 174, 57),
+    color(255, 230, 41),
+    color(255, 234, 82),
+    color(255, 220, 0),
+    color(71, 59, 31),
+    color(71, 59, 31),
+    color(158, 108, 0)
+  );
+}
+function gray_dark() {
+  return new ColorScale(
+    color(25, 25, 25),
+    color(17, 17, 17),
+    color(42, 42, 42),
+    color(34, 34, 34),
+    color(49, 49, 49),
+    color(72, 72, 72),
+    color(58, 58, 58),
+    color(96, 96, 96),
+    color(110, 110, 110),
+    color(97, 97, 97),
+    color(123, 123, 123),
+    color(255, 255, 255),
+    color(238, 238, 238),
+    color(180, 180, 180)
+  );
+}
 function slate_dark() {
   return new ColorScale(
     color(24, 25, 27),
@@ -1384,6 +1510,8 @@ var Theme = class extends CustomType {
     this.extra_css_variables = extra_css_variables;
   }
 };
+var DarkModeFromSystemPreferences = class extends CustomType {
+};
 var FontFamilies = class extends CustomType {
   constructor(heading, text3, code) {
     super();
@@ -1416,6 +1544,15 @@ var SizeScaleRem = class extends CustomType {
     this.xl_3 = xl_3;
   }
 };
+function from_system_preferences() {
+  return new DarkModeFromSystemPreferences();
+}
+function with_base(theme, update2) {
+  return theme.withFields({ base: update2(theme.base) });
+}
+function with_primary(theme, update2) {
+  return theme.withFields({ primary: update2(theme.primary) });
+}
 function theme_style(css) {
   return style(
     toList([attribute("data-w-theme", "true")]),
@@ -1472,6 +1609,24 @@ var default_font_families = new FontFamilies(
   "monospace"
 );
 var empty_size_scale = new SizeScale("", "", "", "", "", "", "");
+function light_theme() {
+  return new Theme(
+    "light",
+    false,
+    default_font_families,
+    empty_size_scale,
+    1,
+    empty_size_scale,
+    1,
+    slate(),
+    pink2(),
+    cyan(),
+    green2(),
+    yellow2(),
+    red2(),
+    toList([])
+  );
+}
 function dark_theme() {
   return new Theme(
     "dark",
@@ -1572,13 +1727,13 @@ function base_classes() {
             variant + "-tint"
           ) + ";border-color:" + css_color_value(variant + "-accent") + ";color:" + css_color_value(
             variant + "-text"
-          ) + ";} .w-" + variant + ".w-solid {background-color:" + css_color_value(
-            variant + "-solid"
-          ) + ";color:" + css_color_value(variant + "-solid-text") + ";}.w-" + variant + ":is(a,button):hover {background-color:" + css_color_value(
+          ) + ";}.w-" + variant + ":is(a,button):hover {background-color:" + css_color_value(
             variant + "-tint-strong"
           ) + ";border-color:" + css_color_value(variant + "-accent-strong") + ";}.w-" + variant + ":is(a,button):is(:active:focus) {background-color:" + css_color_value(
             variant + "-tint-subtle"
-          ) + ";border-color:" + css_color_value(variant + "-accent-subtle") + ";}.w-" + variant + ".w-solid:is(a,button):hover {background-color:" + css_color_value(
+          ) + ";border-color:" + css_color_value(variant + "-accent-subtle") + ";} .w-" + variant + ".w-solid {background-color:" + css_color_value(
+            variant + "-solid"
+          ) + ";color:" + css_color_value(variant + "-solid-text") + ";}.w-" + variant + ".w-solid:is(a,button):hover {background-color:" + css_color_value(
             variant + "-solid-strong"
           ) + ";}.w-" + variant + ".w-solid:is(a,button):is(:active:focus) {background-color:" + css_color_value(
             variant + "-solid-subtle"
@@ -1630,35 +1785,68 @@ function to_css_string(theme) {
   let _pipe$1 = concat(_pipe);
   return to_css_defs(_pipe$1);
 }
-function to_global_styles(theme) {
-  return theme_style("body { " + to_css_string(theme) + "}");
+function to_global_styles_with_dark_mode(light_theme3, dark_theme3, dark_mode_source) {
+  let light_styles = "body { " + to_css_string(light_theme3) + "}";
+  let dark_styles = (() => {
+    if (dark_mode_source instanceof DarkModeFromSystemPreferences) {
+      return "@media (prefers-color-scheme: dark) { body { " + to_css_string(
+        dark_theme3
+      ) + "} }";
+    } else {
+      let dark_mode_class = dark_mode_source[0];
+      return "body." + dark_mode_class + ", ." + dark_mode_class + " { " + to_css_string(
+        dark_theme3
+      ) + "}";
+    }
+  })();
+  return theme_style(light_styles + " " + dark_styles);
 }
 
 // build/dev/javascript/example/example.mjs
+function light_theme2() {
+  let _pipe = light_theme();
+  return with_primary(_pipe, (_) => {
+    return pink2();
+  });
+}
+function dark_theme2() {
+  let _pipe = dark_theme();
+  let _pipe$1 = with_base(_pipe, (_) => {
+    return gray_dark();
+  });
+  return with_primary(_pipe$1, (_) => {
+    return pink_dark();
+  });
+}
+function theme_styles() {
+  return to_global_styles_with_dark_mode(
+    light_theme2(),
+    dark_theme2(),
+    from_system_preferences()
+  );
+}
 function main() {
-  let app = element2(
-    div(
+  let $ = (() => {
+    let _pipe = div(
       toList([]),
       toList([
+        theme_styles(),
         base_styles(),
         base_classes(),
-        (() => {
-          let _pipe = dark_theme();
-          return to_global_styles(_pipe);
-        })(),
         button(
-          toList([class$("w-primary")]),
-          toList([text("clicky me pls")])
+          toList([class$("w-primary w-solid")]),
+          toList([text("click me please")])
         )
       ])
-    )
-  );
-  let $ = start3(app, "#app", void 0);
+    );
+    let _pipe$1 = element2(_pipe);
+    return start3(_pipe$1, "#app", void 0);
+  })();
   if (!$.isOk()) {
     throw makeError(
       "assignment_no_match",
       "example",
-      21,
+      28,
       "main",
       "Assignment pattern did not match",
       { value: $ }

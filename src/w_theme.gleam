@@ -440,15 +440,6 @@ pub fn base_classes() {
       <> ";color:"
       <> css_color_value(variant <> "-text")
       <> ";}"
-      // .w-variant.w-solid
-      <> " .w-"
-      <> variant
-      <> ".w-solid {"
-      <> "background-color:"
-      <> css_color_value(variant <> "-solid")
-      <> ";color:"
-      <> css_color_value(variant <> "-solid-text")
-      <> ";}"
       // .w-variant (anchors and buttons) - hover
       <> ".w-"
       <> variant
@@ -466,6 +457,15 @@ pub fn base_classes() {
       <> css_color_value(variant <> "-tint-subtle")
       <> ";border-color:"
       <> css_color_value(variant <> "-accent-subtle")
+      <> ";}"
+      // .w-variant.w-solid
+      <> " .w-"
+      <> variant
+      <> ".w-solid {"
+      <> "background-color:"
+      <> css_color_value(variant <> "-solid")
+      <> ";color:"
+      <> css_color_value(variant <> "-solid-text")
       <> ";}"
       // .w-variant.w-solid (anchors and buttons) - hover
       <> ".w-"
