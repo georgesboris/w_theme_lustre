@@ -1,11 +1,13 @@
 import gleam/float
-import gleam/io
+import gleam/int
 import gleam/list
-import gleam/option
+import gleam/pair
 import gleam/string
-import gleam_cummunity/colour
+import gleam_community/colour
+import lustre/attribute
 import lustre/element
-import w_theme/colors
+import lustre/element/html
+import w_theme/color
 
 // ----------------------------------------------------------------------------
 // Creating Themes
@@ -61,24 +63,8 @@ pub fn from_class(class: String) {
 
 ///
 ///
-pub type ColorScale {
-  ColorScale(
-    bg: colour.Color,
-    bg_subtle: colour.Color,
-    tint: colour.Color,
-    tint_subtle: colour.Color,
-    tint_strong: colour.Color,
-    accent: colour.Color,
-    accent_subtle: colour.Color,
-    accent_strong: colour.Color,
-    solid: colour.Color,
-    solid_subtle: colour.Color,
-    solid_strong: colour.Color,
-    solid_text: colour.Color,
-    text: colour.Color,
-    text_subtle: colour.Color,
-  )
-}
+pub type ColorScale =
+  color.ColorScale
 
 // ----------------------------------------------------------------------------
 // Creating Themes - Font Families
@@ -140,7 +126,7 @@ const default_border_radius = SizeScaleRem(
   md: 0.375,
   lg: 0.5,
   xl: 0.75,
-  xl_2: 1,
+  xl_2: 1.0,
   xl_3: 1.5,
 )
 
@@ -148,10 +134,10 @@ const default_spacing = SizeScaleRem(
   xs: 0.25,
   sm: 0.5,
   md: 0.75,
-  lg: 1,
+  lg: 1.0,
   xl: 0.5,
   xl_2: 2.5,
-  xl_3: 4,
+  xl_3: 4.0,
 )
 
 // ----------------------------------------------------------------------------
@@ -169,12 +155,12 @@ pub fn light_theme() {
     border_radius_scale: 1.0,
     spacing: empty_size_scale,
     spacing_scale: 1.0,
-    base: colors.slate(),
-    primary: colors.pink(),
-    secondary: colors.cyan(),
-    success: colors.green(),
-    warning: colors.yellow(),
-    danger: colors.red(),
+    base: color.slate(),
+    primary: color.pink(),
+    secondary: color.cyan(),
+    success: color.green(),
+    warning: color.yellow(),
+    danger: color.red(),
     extra_css_variables: [],
   )
 }
@@ -190,12 +176,12 @@ pub fn dark_theme() {
     border_radius_scale: 1.0,
     spacing: empty_size_scale,
     spacing_scale: 1.0,
-    base: colors.slate_dark(),
-    primary: colors.pink_dark(),
-    secondary: colors.cyan_dark(),
-    success: colors.green_dark(),
-    warning: colors.yellow_dark(),
-    danger: colors.red_dark(),
+    base: color.slate_dark(),
+    primary: color.pink_dark(),
+    secondary: color.cyan_dark(),
+    success: color.green_dark(),
+    warning: color.yellow_dark(),
+    danger: color.red_dark(),
     extra_css_variables: [],
   )
 }
@@ -257,7 +243,7 @@ pub fn with_border_radius_scale(
   theme: Theme,
   update: fn(SizeScale) -> SizeScale,
 ) -> Theme {
-  Theme(..theme, border_radius_scale: update(theme.border_radius))
+  Theme(..theme, border_radius: update(theme.border_radius))
 }
 
 // ----------------------------------------------------------------------------
@@ -276,7 +262,7 @@ pub fn with_spacing_scale(
   theme: Theme,
   update: fn(SizeScale) -> SizeScale,
 ) -> Theme {
-  Theme(..theme, border_radius_scale: update(theme.spacing))
+  Theme(..theme, border_radius: update(theme.spacing))
 }
 
 // ----------------------------------------------------------------------------
@@ -339,19 +325,20 @@ pub fn with_extra_css_variables(
 // Using Themes
 // ----------------------------------------------------------------------------
 
+fn theme_style(css: String) -> element.Element(a) {
+  html.style([attribute.attribute("data-w-theme", "true")], css)
+}
+
 ///
 ///
 pub fn to_global_styles(theme: Theme) -> element.Element(a) {
-  element.style(attrs: [], css: "body { " <> to_css_string(theme) <> "}")
+  theme_style("body { " <> to_css_string(theme) <> "}")
 }
 
 ///
 ///
 pub fn to_class_styles(theme: Theme, class: String) -> element.Element(a) {
-  element.style(
-    attrs: [],
-    css: "." <> class <> " { " <> to_css_string(theme) <> "}",
-  )
+  theme_style("." <> class <> " { " <> to_css_string(theme) <> "}")
 }
 
 ///
@@ -378,7 +365,7 @@ pub fn to_global_styles_with_dark_mode(
       <> "}"
   }
 
-  element.style(attrs: [], css: light_styles <> " " <> dark_styles)
+  theme_style(light_styles <> " " <> dark_styles)
 }
 
 ///
@@ -415,7 +402,88 @@ pub fn to_class_styles_with_dark_mode(
       <> "} }"
   }
 
-  element.style(attrs: [], css: light_styles <> " " <> dark_styles)
+  theme_style(light_styles <> " " <> dark_styles)
+}
+
+pub fn base_styles() {
+  html.style(
+    [],
+    "body { background:"
+      <> css_color_value("base-bg")
+      <> ";color:"
+      <> css_color_value("base-text")
+      <> ";font-family:"
+      <> css_var_value("font-text")
+      <> ";}"
+      <> "h1, h2, h3, h4, h5, h6 {"
+      <> css_var_value("font-heading")
+      <> ";}"
+      <> "code {"
+      <> css_var_value("font-code")
+      <> ";}",
+  )
+}
+
+pub fn base_classes() {
+  html.style(
+    [],
+    ["base", "primary", "secondary", "success", "warning", "danger"]
+      |> list.map(fn(variant) {
+      // .w-variant
+      ".w-"
+      <> variant
+      <> " {"
+      <> "background-color:"
+      <> css_color_value(variant <> "-tint")
+      <> ";border-color:"
+      <> css_color_value(variant <> "-accent")
+      <> ";color:"
+      <> css_color_value(variant <> "-text")
+      <> ";}"
+      // .w-variant.w-solid
+      <> " .w-"
+      <> variant
+      <> ".w-solid {"
+      <> "background-color:"
+      <> css_color_value(variant <> "-solid")
+      <> ";color:"
+      <> css_color_value(variant <> "-solid-text")
+      <> ";}"
+      // .w-variant (anchors and buttons) - hover
+      <> ".w-"
+      <> variant
+      <> ":is(a,button):hover {"
+      <> "background-color:"
+      <> css_color_value(variant <> "-tint-strong")
+      <> ";border-color:"
+      <> css_color_value(variant <> "-accent-strong")
+      <> ";}"
+      // .w-variant (anchors and buttons) - active / focus
+      <> ".w-"
+      <> variant
+      <> ":is(a,button):is(:active:focus) {"
+      <> "background-color:"
+      <> css_color_value(variant <> "-tint-subtle")
+      <> ";border-color:"
+      <> css_color_value(variant <> "-accent-subtle")
+      <> ";}"
+      // .w-variant.w-solid (anchors and buttons) - hover
+      <> ".w-"
+      <> variant
+      <> ".w-solid:is(a,button):hover {"
+      <> "background-color:"
+      <> css_color_value(variant <> "-solid-strong")
+      <> ";}"
+      // .w-variant.w-solid (anchors and buttons) - active / focus
+      <> ".w-"
+      <> variant
+      <> ".w-solid:is(a,button):is(:active:focus) {"
+      <> "background-color:"
+      <> css_color_value(variant <> "-solid-subtle")
+      <> ";}"
+    })
+      |> string.join(""),
+  )
 }
 
 // ----------------------------------------------------------------------------
@@ -435,28 +503,28 @@ fn to_css_string(theme: Theme) -> String {
     to_color_scale_vars("success", theme.success),
     to_color_scale_vars("warning", theme.warning),
     to_color_scale_vars("danger", theme.danger),
-    list.map(theme.extra_css_variables, map_first(_, css_var)),
+    list.map(theme.extra_css_variables, pair.map_first(_, css_var)),
   ]
   |> list.concat()
   |> to_css_defs()
 }
 
-fn to_color_scheme_var(theme) {
+fn to_color_scheme_var(theme: Theme) -> List(#(String, String)) {
   case theme.use_dark_color_scheme {
     True -> [#("color-scheme", "dark")]
     False -> [#("color-scheme", "light")]
   }
 }
 
-fn to_css_defs(defs: #(String, String)) -> String {
+fn to_css_defs(defs: List(#(String, String))) -> String {
   list.fold(defs, "", fn(acc, kv) { kv.0 <> ":" <> kv.1 <> ";" <> acc })
 }
 
 fn to_font_family_vars(theme: Theme) -> List(#(String, String)) {
   [
-    #("font-heading", theme.fonts.heading),
-    #("font-text", theme.fonts.text),
-    #("font-code", theme.fonts.code),
+    #("font-heading", theme.font_families.heading),
+    #("font-text", theme.font_families.text),
+    #("font-code", theme.font_families.code),
   ]
 }
 
@@ -498,7 +566,7 @@ fn to_size_vars(
 
 fn to_size_var(user_value: String, default_value: Float, scale_factor: Float) {
   case user_value {
-    "" -> float.to_string(default_value * scale_factor) <> "rem"
+    "" -> float.to_string(default_value *. scale_factor) <> "rem"
     _ -> user_value
   }
 }
@@ -506,12 +574,27 @@ fn to_size_var(user_value: String, default_value: Float, scale_factor: Float) {
 const namespace = "w"
 
 fn css_var(id: String) -> String {
-  "--" <> namespace <> "-"
-  id
+  "--" <> namespace <> "-" <> id
 }
 
 fn css_var_value(id: String) -> String {
   "var(" <> css_var(id) <> ")"
+}
+
+fn css_color_value(id: String) -> String {
+  "rgb(" <> css_var_value(id) <> ")"
+}
+
+fn css_color(color: colour.Color) -> String {
+  let #(r, g, b, _) = colour.to_rgba(color)
+
+  rgba_to_255(r) <> " " <> rgba_to_255(g) <> " " <> rgba_to_255(b)
+}
+
+fn rgba_to_255(value: Float) -> String {
+  value *. 255.0
+  |> float.round()
+  |> int.to_string()
 }
 
 fn to_color_scale_vars(
@@ -519,19 +602,19 @@ fn to_color_scale_vars(
   color_scale: ColorScale,
 ) -> List(#(String, String)) {
   [
-    #(css_var(name <> "-bg"), color_scale.bg),
-    #(css_var(name <> "-bg-subtle"), color_scale.bg_subtle),
-    #(css_var(name <> "-tint"), color_scale.tint),
-    #(css_var(name <> "-tint-subtle"), color_scale.tint_subtle),
-    #(css_var(name <> "-tint-strong"), color_scale.tint_strong),
-    #(css_var(name <> "-accent"), color_scale.accent),
-    #(css_var(name <> "-accent-subtle"), color_scale.accent_subtle),
-    #(css_var(name <> "-accent-strong"), color_scale.accent_strong),
-    #(css_var(name <> "-solid"), color_scale.solid),
-    #(css_var(name <> "-solid-subtle"), color_scale.solid_subtle),
-    #(css_var(name <> "-solid-strong"), color_scale.solid_strong),
-    #(css_var(name <> "-solid-text"), color_scale.solid_text),
-    #(css_var(name <> "-text"), color_scale.text),
-    #(css_var(name <> "-text-subtle"), color_scale.text_subtle),
+    #(css_var(name <> "-bg"), css_color(color_scale.bg)),
+    #(css_var(name <> "-bg-subtle"), css_color(color_scale.bg_subtle)),
+    #(css_var(name <> "-tint"), css_color(color_scale.tint)),
+    #(css_var(name <> "-tint-subtle"), css_color(color_scale.tint_subtle)),
+    #(css_var(name <> "-tint-strong"), css_color(color_scale.tint_strong)),
+    #(css_var(name <> "-accent"), css_color(color_scale.accent)),
+    #(css_var(name <> "-accent-subtle"), css_color(color_scale.accent_subtle)),
+    #(css_var(name <> "-accent-strong"), css_color(color_scale.accent_strong)),
+    #(css_var(name <> "-solid"), css_color(color_scale.solid)),
+    #(css_var(name <> "-solid-subtle"), css_color(color_scale.solid_subtle)),
+    #(css_var(name <> "-solid-strong"), css_color(color_scale.solid_strong)),
+    #(css_var(name <> "-solid-text"), css_color(color_scale.solid_text)),
+    #(css_var(name <> "-text"), css_color(color_scale.text)),
+    #(css_var(name <> "-text-subtle"), css_color(color_scale.text_subtle)),
   ]
 }
